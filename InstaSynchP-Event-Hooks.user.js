@@ -3,7 +3,7 @@
 // @namespace   InstaSynchP
 // @description Add hooks to the events on the InstaSynch page
 
-// @version     1
+// @version     1.0.1
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license     GPL-3.0
@@ -19,16 +19,18 @@
 // @require     https://greasyfork.org/scripts/5647-instasynchp-library/code/InstaSynchP%20Library.js
 // ==/UserScript==
 
-function Plugin() {
+function EventBase(version) {
     "use strict";
-    this.version = 1;
+    Plugin.apply(this, arguments);
 }
+EventBase.prototype = Plugin.prototype;
+EventBase.prototype.constructor = EventBase;
 
 function ref() {
     return window.plugins.eventBase;
 }
 
-Plugin.prototype.executeOnceCore = function () {
+EventBase.prototype.executeOnceCore = function () {
     "use strict";
 
     var oldSendCmd = window.global.sendcmd,
@@ -189,7 +191,7 @@ Plugin.prototype.executeOnceCore = function () {
     }, false);
 };
 
-Plugin.prototype.preConnect = function () {
+EventBase.prototype.preConnect = function () {
     "use strict";
     var oldPlayerDestroy = window.video.destroy;
     $("#chat input").bindFirst('keypress', function (event) {
@@ -213,4 +215,4 @@ Plugin.prototype.preConnect = function () {
 
 
 window.plugins = window.plugins || {};
-window.plugins.eventBase = new Plugin();
+window.plugins.eventBase = new EventBase("1.0.1");
