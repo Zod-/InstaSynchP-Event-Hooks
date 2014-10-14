@@ -3,7 +3,7 @@
 // @namespace   InstaSynchP
 // @description Add hooks to the events on the InstaSynch page
 
-// @version     1.0.3
+// @version     1.0.4
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license     GPL-3.0
@@ -24,7 +24,7 @@ function EventBase(version) {
     this.version = version;
 }
 
-function ref() {
+function eventBaseRef() {
     return window.plugins.eventBase;
 }
 
@@ -148,4 +148,4 @@ EventBase.prototype.preConnect = function () {
 
 
 window.plugins = window.plugins || {};
-window.plugins.eventBase = new EventBase("1.0.3");
+window.plugins.eventBase = new EventBase("1.0.4");
