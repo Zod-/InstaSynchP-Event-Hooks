@@ -3,7 +3,7 @@
 // @namespace   InstaSynchP
 // @description Add hooks to the events on the InstaSynch page
 
-// @version     1.0.5
+// @version     1.0.6
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license     GPL-3.0
@@ -132,18 +132,21 @@ EventBase.prototype.preConnect = function () {
     };
     $("#chat input").bindFirst('keypress', function (event) {
         events.fire('InputKeypress[{0}]'.format(event.keyCode), [event, $("#chat input").val()], false);
+        events.fire('InputKeypress', [event, $("#chat input").val()], false);
         if (event.keyCode === 13 && $("#chat input").val() !== '') {
             events.fire('SendChat', [event, $("#chat input").val()], false);
         }
     });
     $("#chat input").bindFirst('keydown', function (event) {
         events.fire('InputKeydown[{0}]'.format(event.keyCode), [event, $("#chat input").val()], false);
+        events.fire('InputKeydown', [event, $("#chat input").val()], false);
     });
     $("#chat input").bindFirst('keyup', function (event) {
         events.fire('InputKeyup[{0}]'.format(event.keyCode), [event, $("#chat input").val()], false);
+        events.fire('InputKeyup', [event, $("#chat input").val()], false);
     });
 };
 
 
 window.plugins = window.plugins || {};
-window.plugins.eventBase = new EventBase("1.0.5");
+window.plugins.eventBase = new EventBase("1.0.6");
