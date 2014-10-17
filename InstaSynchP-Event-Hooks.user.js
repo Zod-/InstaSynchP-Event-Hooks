@@ -3,7 +3,7 @@
 // @namespace   InstaSynchP
 // @description Add hooks to the events on the InstaSynch page
 
-// @version     1.0.4
+// @version     1.0.5
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license     GPL-3.0
@@ -30,20 +30,18 @@ function eventBaseRef() {
 
 EventBase.prototype.executeOnceCore = function () {
     "use strict";
-
     var hooks = {
-        'sendcmd':{'loc':'global','name':'SendCmd'},
-        'onConnecting':{'loc':'global','name':'Connecting'},
-        'onConnected':{'loc':'global','name':'Connected'},
-        'onJoining':{'loc':'global','name':'Joining'},
-        'onJoined':{'loc':'global','name':'Joined'},
-        'onReconnecting':{'loc':'global','name':'Reconnecting'},
-        'onReconnect':{'loc':'global','name':'Reconnect'},
-        'reconnectFailed':{'loc':'global','name':'ReconnectFailed'},
-        'onError':{'loc':'global','name':'Error'},
-        'onDisconnect':{'loc':'global','name':'Disconnect'},
-        'requestPartialPage':{'loc':'global','name':'RequestPartialPage'},
-        'loadRoomObj':{'loc':'global','name':'LoadRoom'},
+        'onConnecting':{'location':'global','name':'Connecting'},
+        'onConnected':{'location':'global','name':'Connected'},
+        'onJoining':{'location':'global','name':'Joining'},
+        'onJoined':{'location':'global','name':'Joined'},
+        'onReconnecting':{'location':'global','name':'Reconnecting'},
+        'onReconnect':{'location':'global','name':'Reconnect'},
+        'reconnectFailed':{'location':'global','name':'ReconnectFailed'},
+        'onError':{'location':'global','name':'Error'},
+        'onDisconnect':{'location':'global','name':'Disconnect'},
+        'requestPartialPage':{'location':'global','name':'RequestPartialPage'},
+        'loadRoomObj':{'location':'global','name':'LoadRoom'},
         'addMessage':{'name':'AddMessage'},
         'addUser':{'name':'AddUser'},
         'removeUser':{'name':'RemoveUser'},
@@ -127,6 +125,11 @@ EventBase.prototype.executeOnceCore = function () {
 EventBase.prototype.preConnect = function () {
     "use strict";
     var oldPlayerDestroy = window.video.destroy;
+    window.video.destroy = function () {
+        events.fire('PlayerDestroy', [], true);
+        oldPlayerDestroy();
+        events.fire('PlayerDestroy', [], false);
+    };
     $("#chat input").bindFirst('keypress', function (event) {
         events.fire('InputKeypress[{0}]'.format(event.keyCode), [event, $("#chat input").val()], false);
         if (event.keyCode === 13 && $("#chat input").val() !== '') {
@@ -139,13 +142,8 @@ EventBase.prototype.preConnect = function () {
     $("#chat input").bindFirst('keyup', function (event) {
         events.fire('InputKeyup[{0}]'.format(event.keyCode), [event, $("#chat input").val()], false);
     });
-    window.video.destroy = function () {
-        events.fire('PlayerDestroy', [], true);
-        oldPlayerDestroy();
-        events.fire('PlayerDestroy', [], false);
-    };
 };
 
 
 window.plugins = window.plugins || {};
-window.plugins.eventBase = new EventBase("1.0.4");
+window.plugins.eventBase = new EventBase("1.0.5");
