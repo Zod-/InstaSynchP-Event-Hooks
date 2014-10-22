@@ -3,7 +3,7 @@
 // @namespace   InstaSynchP
 // @description Add hooks to the events on the InstaSynch page
 
-// @version     1.0.6
+// @version     1.0.7
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license     GPL-3.0
@@ -19,18 +19,17 @@
 // @require     https://greasyfork.org/scripts/5647-instasynchp-library/code/InstaSynchP%20Library.js
 // ==/UserScript==
 
-function EventBase(version) {
+function EventHooks(version) {
     "use strict";
     this.version = version;
+    this.resetVariables();
 }
 
-function eventBaseRef() {
-    return window.plugins.eventBase;
-}
-
-EventBase.prototype.executeOnceCore = function () {
+EventHooks.prototype.executeOnceCore = function () {
     "use strict";
-    var hooks = {
+    var th = this,
+        oldLinkify = window.linkify,
+        hooks = {
         'onConnecting':{'location':'global','name':'Connecting'},
         'onConnected':{'location':'global','name':'Connected'},
         'onJoining':{'location':'global','name':'Joining'},
@@ -64,6 +63,42 @@ EventBase.prototype.executeOnceCore = function () {
         'endPoll':{'name':'EndPoll'}
     };
 
+    window.linkify = function (str, buildHashtagUrl, includeW3, target) {
+        var tags = [],
+            index = -1;
+        //remove image urls so they wont get linkified
+        str = str.replace(/(src|href)=\"([^\"]*)\"/gi, function ($0, $1, $2) {
+            tags.push({
+                'tagName': $1,
+                'url': $2
+            });
+            return '{0}=\"\"'.format($1);
+        });
+        str = oldLinkify(str, buildHashtagUrl, includeW3, target);
+        //put them back in
+        str = str.replace(/(src|href)=\"\"/gi, function () {
+            index += 1;
+            return '{0}="{1}"'.format(tags[index].tagName, tags[index].url);
+        });
+        return str;
+    };
+
+    function countUser(user, neg) {
+        var inc = (typeof neg === 'boolean' && neg) ? -1 : 1;
+        if (user.permissions > 0) {
+            th.mods += inc;
+        }
+        if (user.loggedin) {
+            th.blacknames += inc;
+        } else {
+            th.greynames += inc;
+        }
+    }
+
+    function subtractUser(user) {
+        countUser(user, true);
+    }
+
     function createHookFunction(ev) {
         function defaultFunction() {
                 events.fire(ev.name, arguments, true);
@@ -72,15 +107,22 @@ EventBase.prototype.executeOnceCore = function () {
             }
             //custom hooks
         switch (ev.name) {
+        case 'AddUser':
+            return function () {
+                countUser(arguments[0]);
+                defaultFunction.apply(undefined, arguments);
+            };
         case 'RemoveUser':
             return function () {
-                var args = [].slice.call(arguments);
-                args.push(findUserId(args[0])); //user
+                var args = [].slice.call(arguments),
+                    user = findUserId(args[0]);
+                args.push(user);
+                subtractUser(user);
                 defaultFunction.apply(undefined, args);
             };
         case 'RemoveVideo':
             return function () {
-                var indexOfVid = window.getVideoIndex(arguments[0].info),
+                var indexOfVid = window.getVideoIndex(arguments[0]),
                     video = window.playlist[indexOfVid],
                     args = [].slice.call(arguments);
                 args.push(video);
@@ -90,7 +132,13 @@ EventBase.prototype.executeOnceCore = function () {
         case 'MoveVideo':
             return function () {
                 var args = [].slice.call(arguments);
-                args.push(window.getVideoIndex(args[0]).info); //old position
+                args.push(getVideoIndex(args[0]).info); //old position
+                defaultFunction.apply(undefined, args);
+            };
+        case 'Skips':
+            return function () {
+                var args = [].slice.call(arguments);
+                args.push((args[1] / th.blacknames) * 100); //skip percentage
                 defaultFunction.apply(undefined, args);
             };
         }
@@ -120,9 +168,14 @@ EventBase.prototype.executeOnceCore = function () {
             events.fire('PageMessage', [parsed], false);
         } catch (ignore) {}
     }, false);
+
+    //get user count when already connected
+    if (window.plugins.core.connected) {
+        window.users.forEach(countUser);
+    }
 };
 
-EventBase.prototype.preConnect = function () {
+EventHooks.prototype.preConnect = function () {
     "use strict";
     var oldPlayerDestroy = window.video.destroy;
     window.video.destroy = function () {
@@ -147,6 +200,12 @@ EventBase.prototype.preConnect = function () {
     });
 };
 
+EventHooks.prototype.resetVariables = function () {
+    "use strict";
+    this.mods = 0;
+    this.blacknames = 0;
+    this.greynames = 0;
+};
 
 window.plugins = window.plugins || {};
-window.plugins.eventBase = new EventBase("1.0.6");
+window.plugins.eventHooks = new EventHooks("1.0.7");
