@@ -55,9 +55,9 @@ Other events
 
 Public Variables
 ---------
-* `events.mods` # of mods
-* `events.blacknames` # of blacknames
-* `events.greynames` # of greynames
+* `eventHooks.mods` # of mods
+* `eventHooks.blacknames` # of blacknames
+* `eventHooks.greynames` # of greynames
 
 License
 -----------
