@@ -3,7 +3,7 @@
 // @namespace   InstaSynchP
 // @description Add hooks to the events on the InstaSynch page
 
-// @version     1.0.7
+// @version     1.0.8
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license     GPL-3.0
@@ -22,6 +22,7 @@
 function EventHooks(version) {
     "use strict";
     this.version = version;
+    this.name = 'InstaSynchP Event Hooks';
     this.resetVariables();
 }
 
@@ -132,7 +133,7 @@ EventHooks.prototype.executeOnceCore = function () {
         case 'MoveVideo':
             return function () {
                 var args = [].slice.call(arguments);
-                args.push(getVideoIndex(args[0]).info); //old position
+                args.push(window.getVideoIndex(args[0])); //old position
                 defaultFunction.apply(undefined, args);
             };
         case 'Skips':
@@ -187,7 +188,7 @@ EventHooks.prototype.preConnect = function () {
         events.fire('InputKeypress[{0}]'.format(event.keyCode), [event, $("#chat input").val()], false);
         events.fire('InputKeypress', [event, $("#chat input").val()], false);
         if (event.keyCode === 13 && $("#chat input").val() !== '') {
-            events.fire('SendChat', [event, $("#chat input").val()], false);
+            events.fire('SendChat', [$("#chat input").val()], false);
         }
     });
     $("#chat input").bindFirst('keydown', function (event) {
@@ -208,4 +209,4 @@ EventHooks.prototype.resetVariables = function () {
 };
 
 window.plugins = window.plugins || {};
-window.plugins.eventHooks = new EventHooks("1.0.7");
+window.plugins.eventHooks = new EventHooks('1.0.8');

@@ -1,7 +1,63 @@
 InstaSynchP-Event-Hooks
 =======================
 
-Add hooks to all the events on the InstaSynch page
+Add hooks to a lot of the events on the InstaSynch page
+
+Events
+------
+Events from InstaSynch
+```javascript
+'AddMessage': [user, message, extraStyles]
+'AddUser': [user, sortUserlist]
+'RemoveUser': [userId, user]
+'MakeLeader': [userId]
+'RenameUser': [userId, username]
+'AddVideo': [video, updateScrollbar]
+'RemoveVideo': [videoinfo, video, indexOfVideo]
+'MoveVideo': [videoinfo, position, oldPosition]
+'PlayVideo': [videoinfo, time, playing]
+'Resume': []
+'Pause': []
+'SeekTo': []
+'Purge': [username]
+'Skips': [skips, skipsNeeded, percentage]
+'PlayerDestroy': []
+'LoadPlaylist': [arrVideos]
+'LoadUserlist': [arrUsers]
+'CreatePoll': [poll]
+'AddPollVote': [index]
+'RemovePollVote': [index]
+'EndPoll': []
+'OnConnecting': []
+'OnConnected': []
+'OnJoining': []
+'OnJoined': []
+'OnReconnecting': []
+'OnReconnect': []
+'ReconnectFailed': []
+'OnError': []
+'OnDisconnect': []
+'RequestPartialPage': [name, room, back]
+'LoadRoomObj': []
+```
+
+Other events
+```javascript
+'PageMessage': [object]
+'SendChat': [inputValue] /*inputValue can still be changed*/
+'InputKeypress': [event, inputValue]
+'InputKeypress[keycode]': [event, inputValue] /*e.g. InputKeypress[9] for enter*/
+'InputKeydown': [event, inputValue]
+'InputKeydown[keycode]': [event, inputValue] /*e.g. InputKeydown[9] for enter*/
+'InputKeyup': [event, inputValue]
+'InputKeyup[keycode]': [event, inputValue] /*e.g. InputKeyup[9] for enter*/
+```
+
+Public Variables
+---------
+* `events.mods` # of mods
+* `events.blacknames` # of blacknames
+* `events.greynames` # of greynames
 
 License
 -----------
