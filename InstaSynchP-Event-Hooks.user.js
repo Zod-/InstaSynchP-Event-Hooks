@@ -3,7 +3,7 @@
 // @namespace   InstaSynchP
 // @description Add hooks to the events on the InstaSynch page
 
-// @version     1.0.8
+// @version     1.0.9
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license     MIT
@@ -121,6 +121,14 @@ EventHooks.prototype.executeOnceCore = function () {
                 subtractUser(user);
                 defaultFunction.apply(undefined, args);
             };
+        case 'RenameUser':
+            return function () {
+                var args = [].slice.call(arguments),
+                    user = findUserId(args[0]);
+                args.push(user);
+                subtractUser(user);
+                defaultFunction.apply(undefined, args);
+            };
         case 'RemoveVideo':
             return function () {
                 var indexOfVid = window.getVideoIndex(arguments[0]),
@@ -132,8 +140,11 @@ EventHooks.prototype.executeOnceCore = function () {
             };
         case 'MoveVideo':
             return function () {
-                var args = [].slice.call(arguments);
-                args.push(window.getVideoIndex(args[0])); //old position
+                var args = [].slice.call(arguments),
+                    oldPosition = window.getVideoIndex(args[0]),
+                    video = window.playlist[indexOfVid];
+                args.push(oldPosition);
+                args.push(video);
                 defaultFunction.apply(undefined, args);
             };
         case 'Skips':
@@ -209,4 +220,4 @@ EventHooks.prototype.resetVariables = function () {
 };
 
 window.plugins = window.plugins || {};
-window.plugins.eventHooks = new EventHooks('1.0.8');
+window.plugins.eventHooks = new EventHooks('1.0.9');
