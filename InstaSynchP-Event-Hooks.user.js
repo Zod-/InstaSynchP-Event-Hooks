@@ -3,7 +3,7 @@
 // @namespace   InstaSynchP
 // @description Add hooks to the events on the InstaSynch page
 
-// @version     1.1
+// @version     1.1.1
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license     MIT
@@ -15,7 +15,7 @@
 // @grant       none
 // @run-at      document-start
 
-// @require     https://greasyfork.org/scripts/2857-jquery-bind-first/code/jquerybind-first.js
+// @require     https://greasyfork.org/scripts/2857-jquery-bind-first/code/jquerybind-first.js?version=26080
 // @require     https://greasyfork.org/scripts/5647-instasynchp-library/code/InstaSynchP%20Library.js
 // ==/UserScript==
 
@@ -220,4 +220,4 @@ EventHooks.prototype.resetVariables = function () {
 };
 
 window.plugins = window.plugins || {};
-window.plugins.eventHooks = new EventHooks('1.1');
+window.plugins.eventHooks = new EventHooks('1.1.1');
