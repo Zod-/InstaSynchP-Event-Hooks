@@ -3,7 +3,7 @@
 // @namespace   InstaSynchP
 // @description Add hooks to the events on the InstaSynch page
 
-// @version     1.1.1
+// @version     1.1.2
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license     MIT
@@ -203,6 +203,10 @@ EventHooks.prototype.preConnect = function () {
         }
     });
     $("#chat input").bindFirst('keydown', function (event) {
+        //prevent loosing focus on tab
+        if (event.keyCode === 9) {
+            event.preventDefault();
+        }
         events.fire('InputKeydown[{0}]'.format(event.keyCode), [event, $("#chat input").val()], false);
         events.fire('InputKeydown', [event, $("#chat input").val()], false);
     });
@@ -220,4 +224,4 @@ EventHooks.prototype.resetVariables = function () {
 };
 
 window.plugins = window.plugins || {};
-window.plugins.eventHooks = new EventHooks('1.1.1');
+window.plugins.eventHooks = new EventHooks('1.1.2');
