@@ -14,7 +14,7 @@
 // @run-at      document-start
 
 // @require     https://greasyfork.org/scripts/2857-jquery-bind-first/code/jquerybind-first.js?version=26080
-// @require     https://greasyfork.org/scripts/5647-instasynchp-library/code/InstaSynchP%20Library.js
+// @require     https://greasyfork.org/scripts/5647-instasynchp-library/code/code.js?version=37716
 // ==/UserScript==
 
 function EventHooks(version) {
