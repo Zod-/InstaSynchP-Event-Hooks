@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name        Beta InstaSynchP Event Hooks
+// @name        InstaSynchP Event Hooks
 // @namespace   InstaSynchP
 // @description Add hooks to the events on the InstaSynch page
 
