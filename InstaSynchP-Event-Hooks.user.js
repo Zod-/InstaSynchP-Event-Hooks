@@ -1,17 +1,15 @@
 // ==UserScript==
-// @name        InstaSynchP Event Hooks
+// @name        Beta InstaSynchP Event Hooks
 // @namespace   InstaSynchP
 // @description Add hooks to the events on the InstaSynch page
 
-// @version     1.1.2
+// @version     1.1.3
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license     MIT
 
-// @include     http://*.instasynch.com/*
-// @include     http://instasynch.com/*
-// @include     http://*.instasync.com/*
-// @include     http://instasync.com/*
+// @include     *://instasync.com/r/*
+// @include     *://*.instasync.com/r/*
 // @grant       none
 // @run-at      document-start
 
@@ -30,39 +28,40 @@ EventHooks.prototype.executeOnceCore = function () {
     "use strict";
     var th = this,
         oldLinkify = window.linkify,
-        hooks = {
-        'onConnecting':{'location':'global','name':'Connecting'},
-        'onConnected':{'location':'global','name':'Connected'},
-        'onJoining':{'location':'global','name':'Joining'},
-        'onJoined':{'location':'global','name':'Joined'},
-        'onReconnecting':{'location':'global','name':'Reconnecting'},
-        'onReconnect':{'location':'global','name':'Reconnect'},
-        'reconnectFailed':{'location':'global','name':'ReconnectFailed'},
-        'onError':{'location':'global','name':'Error'},
-        'onDisconnect':{'location':'global','name':'Disconnect'},
-        'requestPartialPage':{'location':'global','name':'RequestPartialPage'},
-        'loadRoomObj':{'location':'global','name':'LoadRoom'},
-        'addMessage':{'name':'AddMessage'},
-        'addUser':{'name':'AddUser'},
-        'removeUser':{'name':'RemoveUser'},
-        'makeLeader':{'name':'MakeLeader'},
-        'renameUser':{'name':'RenameUser'},
-        'addVideo':{'name':'AddVideo'},
-        'removeVideo':{'name':'RemoveVideo'},
-        'moveVideo':{'name':'MoveVideo'},
-        'playVideo':{'name':'PlayVideo'},
-        'resume':{'name':'Resume'},
-        'pause':{'name':'Pause'},
-        'seekTo':{'name':'SeekTo'},
-        'purge':{'name':'Purge'},
-        'skips':{'name':'Skips'},
-        'loadPlaylist':{'name':'LoadPlaylist'},
-        'loadUserlist':{'name':'LoadUserlist'},
-        'createPoll':{'name':'CreatePoll'},
-        'addPollVote':{'name':'AddPollVote'},
-        'removePollVote':{'name':'RemovePollVote'},
-        'endPoll':{'name':'EndPoll'}
-    };
+        hooks = [
+            {'onConnecting':{'name':'Connecting'}},
+            {'onConnected':{'name':'Connected'}},
+            {'onJoining':{'name':'Joining'}},
+            {'onJoined':{'name':'Joined'}},
+            {'onReconnecting':{'name':'Reconnecting'}},
+            {'onReconnect':{'name':'Reconnect'}},
+            //{'reconnectFailed':{'name':'ReconnectFailed'}},
+            {'onError':{'name':'Error'}},
+            {'onDisconnect':{'name':'Disconnect'}},
+            //{'requestPartialPage':{'name':'RequestPartialPage'}},
+            //{'loadRoomObj':{'name':'LoadRoom'}},
+            {'addMessage':{'name':'AddMessage'}},
+            {'addUser':{'location':'userlist', 'name':'AddUser'}},
+            {'removeUser':{'location':'userlist', 'name':'RemoveUser'}},
+            {'load':{'location':'userlist', 'name':'LoadUserlist'}},
+            {'renameUser':{'location':'userlist', 'name':'RenameUser'}},
+            {'makeLead':{'name':'MakeLeader'}},
+            {'addVideo':{'location':'playlist', 'name':'AddVideo'}},
+            {'removeVideo':{'location':'playlist', 'name':'RemoveVideo'}},
+            {'moveVideo':{'location':'playlist', 'name':'MoveVideo'}},
+            {'playVideo':{'name':'PlayVideo'}},
+            {'load':{'location':'playlist', 'name':'LoadPlaylist'}},
+            {'purge':{'location':'playlist', 'name':'Purge'}},
+            {'resume':{'name':'Resume'}},
+            {'pause':{'name':'Pause'}},
+            {'seekTo':{'name':'SeekTo'}},
+            {'setSkips':{'name':'Skips'}},
+            {'create':{'location':'poll', 'name':'CreatePoll'}},
+            {'addVote':{'location':'poll', 'name':'AddPollVote'}},
+            {'removeVote':{'location':'poll', 'name':'RemovePollVote'}},
+            {'end':{'location':'poll', 'name':'EndPoll'}},
+            {'sendcmd':{'name':'SendCMD'}}
+        ];
 
     window.linkify = function (str, buildHashtagUrl, includeW3, target) {
         var tags = [],
@@ -131,8 +130,8 @@ EventHooks.prototype.executeOnceCore = function () {
             };
         case 'RemoveVideo':
             return function () {
-                var indexOfVid = window.getVideoIndex(arguments[0]),
-                    video = window.playlist[indexOfVid],
+                var indexOfVid = window.room.playlist.indexOf(arguments[0]),
+                    video = window.room.playlist.videos[indexOfVid],
                     args = [].slice.call(arguments);
                 args.push(video);
                 args.push(indexOfVid);
@@ -141,8 +140,8 @@ EventHooks.prototype.executeOnceCore = function () {
         case 'MoveVideo':
             return function () {
                 var args = [].slice.call(arguments),
-                    oldPosition = window.getVideoIndex(args[0]),
-                    video = window.playlist[oldPosition];
+                    oldPosition = window.room.playlist.indexOf(args[0]),
+                    video = window.room.playlist.videos[oldPosition];
                 args.push(oldPosition);
                 args.push(video);
                 defaultFunction.apply(undefined, args);
@@ -156,18 +155,25 @@ EventHooks.prototype.executeOnceCore = function () {
         }
         return defaultFunction;
     }
-    for (var hook in hooks) {
-        if (hooks.hasOwnProperty(hook)) {
-            var ev = hooks[hook];
-            if (ev.location && ev.location === 'global') {
-                ev.old = window.global[hook];
-                window.global[hook] = createHookFunction(ev);
+    hooks.forEach(function (temp) {
+        for (var hook in temp) {
+            if (!temp.hasOwnProperty(hook)) {
+                continue;
+            }
+            var ev = temp[hook];
+            if (ev.location &&
+                window.room[ev.location] &&
+                window.room[ev.location][hook]) {
+                ev.old = window.room[ev.location][hook];
+                window.room[ev.location][hook] = createHookFunction(ev);
+            } else if (window.room[hook]) {
+                ev.old = window.room[hook];
+                window.room[hook] = createHookFunction(ev);
             } else {
-                ev.old = window[hook];
-                window[hook] = createHookFunction(ev);
+               logger().error(th.name, "Hook not found", hook, "with location", ev.location);
             }
         }
-    }
+    });
 
     window.addEventListener("message", function (event) {
         try {
@@ -189,30 +195,31 @@ EventHooks.prototype.executeOnceCore = function () {
 
 EventHooks.prototype.preConnect = function () {
     "use strict";
-    var oldPlayerDestroy = window.video.destroy;
-    window.video.destroy = function () {
+    var csel = '#cin',
+        oldPlayerDestroy = window.room.video.destroy;
+    window.room.video.destroy = function () {
         events.fire('PlayerDestroy', [], true);
         oldPlayerDestroy();
         events.fire('PlayerDestroy', [], false);
     };
-    $("#chat input").bindFirst('keypress', function (event) {
-        events.fire('InputKeypress[{0}]'.format(event.keyCode), [event, $("#chat input").val()], false);
-        events.fire('InputKeypress', [event, $("#chat input").val()], false);
-        if (event.keyCode === 13 && $("#chat input").val() !== '') {
-            events.fire('SendChat', [$("#chat input").val()], false);
+    $(csel).bindFirst('keypress', function (event) {
+        events.fire('InputKeypress[{0}]'.format(event.keyCode), [event, $(csel).val()], false);
+        events.fire('InputKeypress', [event, $(csel).val()], false);
+        if (event.keyCode === 13 && $(csel).val() !== '') {
+            events.fire('SendChat', [$(csel).val()], false);
         }
     });
-    $("#chat input").bindFirst('keydown', function (event) {
+    $(csel).bindFirst('keydown', function (event) {
         //prevent loosing focus on tab
         if (event.keyCode === 9) {
             event.preventDefault();
         }
-        events.fire('InputKeydown[{0}]'.format(event.keyCode), [event, $("#chat input").val()], false);
-        events.fire('InputKeydown', [event, $("#chat input").val()], false);
+        events.fire('InputKeydown[{0}]'.format(event.keyCode), [event, $(csel).val()], false);
+        events.fire('InputKeydown', [event, $(csel).val()], false);
     });
-    $("#chat input").bindFirst('keyup', function (event) {
-        events.fire('InputKeyup[{0}]'.format(event.keyCode), [event, $("#chat input").val()], false);
-        events.fire('InputKeyup', [event, $("#chat input").val()], false);
+    $(csel).bindFirst('keyup', function (event) {
+        events.fire('InputKeyup[{0}]'.format(event.keyCode), [event, $(csel).val()], false);
+        events.fire('InputKeyup', [event, $(csel).val()], false);
     });
 };
 
@@ -224,4 +231,4 @@ EventHooks.prototype.resetVariables = function () {
 };
 
 window.plugins = window.plugins || {};
-window.plugins.eventHooks = new EventHooks('1.1.2');
+window.plugins.eventHooks = new EventHooks('1.1.3');
