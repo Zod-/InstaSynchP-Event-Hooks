@@ -39,6 +39,7 @@ Events from InstaSynch
 'OnDisconnect': []
 'RequestPartialPage': [name, room, back]
 'LoadRoomObj': []
+'SendCMD': [command, data]
 ```
 
 Other events
