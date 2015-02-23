@@ -3,7 +3,7 @@
 // @namespace   InstaSynchP
 // @description Add hooks to the events on the InstaSynch page
 
-// @version     1.1.3
+// @version     1.1.4
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license     MIT
@@ -105,12 +105,36 @@ EventHooks.prototype.executeOnceCore = function () {
         ev.old.apply(undefined, arguments);
         events.fire(ev.name, arguments, false);
       }
+    function arrayFunction() {
+        arguments[0].forEach(function(arg){
+          events.fire(ev.name, [arg], true);
+        });
+        ev.old.apply(undefined, arguments);
+        arguments[0].forEach(function(arg){
+          events.fire(ev.name, [arg], false);
+        });
+      }
       //custom hooks
     switch (ev.name) {
     case 'AddUser':
       return function () {
-        countUser(arguments[0]);
-        defaultFunction.apply(undefined, arguments);
+        if (arguments[0] instanceof Array){
+          arguments[0].forEach(function(user){
+            countUser(user);
+          });
+          arrayFunction.apply(undefined, arguments);
+        }else{
+          countUser(arguments[0]);
+          defaultFunction.apply(undefined, arguments);
+        }
+      };
+    case 'AddVideo':
+      return function () {
+        if (arguments[0] instanceof Array){
+          arrayFunction.apply(undefined, arguments);
+        }else{
+          defaultFunction.apply(undefined, arguments);
+        }
       };
     case 'RemoveUser':
       return function () {
@@ -231,4 +255,4 @@ EventHooks.prototype.resetVariables = function () {
 };
 
 window.plugins = window.plugins || {};
-window.plugins.eventHooks = new EventHooks('1.1.3');
+window.plugins.eventHooks = new EventHooks('1.1.4');
