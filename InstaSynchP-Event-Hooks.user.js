@@ -3,7 +3,7 @@
 // @namespace   InstaSynchP
 // @description Add hooks to the events on the InstaSynch page
 
-// @version     1.1.4
+// @version     1.1.5
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license     MIT
@@ -118,7 +118,7 @@ EventHooks.prototype.executeOnceCore = function () {
     switch (ev.name) {
     case 'AddUser':
       return function () {
-        if (arguments[0] instanceof Array){
+        if (Array.isArray(arguments[0])){
           arguments[0].forEach(function(user){
             countUser(user);
           });
@@ -130,7 +130,7 @@ EventHooks.prototype.executeOnceCore = function () {
       };
     case 'AddVideo':
       return function () {
-        if (arguments[0] instanceof Array){
+        if (Array.isArray(arguments[0])){
           arrayFunction.apply(undefined, arguments);
         }else{
           defaultFunction.apply(undefined, arguments);
@@ -255,4 +255,4 @@ EventHooks.prototype.resetVariables = function () {
 };
 
 window.plugins = window.plugins || {};
-window.plugins.eventHooks = new EventHooks('1.1.4');
+window.plugins.eventHooks = new EventHooks('1.1.5');
