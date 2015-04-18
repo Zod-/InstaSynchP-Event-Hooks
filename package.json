@@ -1,0 +1,45 @@
+{
+  "name": "InstaSynchP-Event-Hooks",
+  "version": "1.1.7",
+  "description": "Attaches itself to the functions on InstaSync to fire events",
+  "main": "Gruntfile.js",
+  "scripts": {
+    "test": "grunt --verbose"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Zod-/InstaSynchP-Event-Hooks"
+  },
+  "keywords": [
+    "InstaSync"
+  ],
+  "author": {
+    "name": "Julian Hangstörfer",
+    "email": "jhangstoerfer@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Zod-/InstaSynchP-Event-Hooks/issues"
+  },
+  "homepage": "https://github.com/Zod-/InstaSynchP-Event-Hooks",
+  "userscript": {
+    "namespace": "InstaSynchP",
+    "author": {
+      "name": "Zod-"
+    },
+    "require": {
+      "greasyfork": {
+        "id": "5647-instasynchp-library",
+        "version": "41059"
+      }
+    },
+    "other": {
+      "include": [
+        "*://instasync.com/r/*",
+        "*://*.instasync.com/r/*"
+      ],
+      "grant": "none",
+      "run-at": "document-start"
+    }
+  }
+}
