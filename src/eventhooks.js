@@ -1,5 +1,5 @@
-function EventHooks(version) {
-  "use strict";
+function EventHooks() {
+  'use strict';
   this.version = '@VERSION@';
   this.name = 'InstaSynchP Event Hooks';
   this.resetVariables();
@@ -13,10 +13,10 @@ EventHooks.prototype.executeOnceCore = function () {
 };
 
 EventHooks.prototype.executeOnceCore = function () {
-  "use strict";
-  var th = this,
-    oldLinkify = window.linkify,
-    hooks = [
+  'use strict';
+  var _this = this;
+  var oldLinkify = window.linkify;
+  var hooks = [
       {'connected':{'location': 'events', 'name':'Connected'}},
       {'joining':{'location': 'events', 'name':'Joining'}},
       {'joined':{'location': 'events', 'name':'Joined'}},
@@ -47,8 +47,8 @@ EventHooks.prototype.executeOnceCore = function () {
     ];
 
   window.linkify = function (str, buildHashtagUrl, includeW3, target) {
-    var tags = [],
-      index = -1;
+    var tags = [];
+    var index = -1;
     //remove image urls so they wont get linkified
     str = str.replace(/(src|href)=\"([^\"]*)\"/gi, function ($0, $1, $2) {
       tags.push({
@@ -69,12 +69,12 @@ EventHooks.prototype.executeOnceCore = function () {
   function countUser(user, neg) {
     var inc = (typeof neg === 'boolean' && neg) ? -1 : 1;
     if (user.permissions > 0) {
-      th.mods += inc;
+      _this.mods += inc;
     }
     if (user.loggedin) {
-      th.blacknames += inc;
+      _this.blacknames += inc;
     } else {
-      th.greynames += inc;
+      _this.greynames += inc;
     }
   }
 
@@ -99,7 +99,7 @@ EventHooks.prototype.executeOnceCore = function () {
       }
 
     if(ev.location === 'events'){
-      room.e.on(ev.hook, function(){
+      window.room.e.on(ev.hook, function(){
         events.fire(ev.name, arguments, false);
       });
       return;
@@ -108,9 +108,9 @@ EventHooks.prototype.executeOnceCore = function () {
     switch (ev.name) {
     case 'LoadPlaylist':
       return function(){
-        if(!th.isPlaylistLoaded){
+        if(!_this.isPlaylistLoaded){
           defaultFunction.apply(undefined, arguments);
-          th.isPlaylistLoaded = true;
+          _this.isPlaylistLoaded = true;
         }else{
           events.fire('Shuffle', arguments, true);
           ev.old.apply(undefined, arguments);
@@ -131,7 +131,7 @@ EventHooks.prototype.executeOnceCore = function () {
       };
     case 'AddVideo':
       return function () {
-        if (th.isShuffle) {
+        if (_this.isShuffle) {
           ev.old.apply(undefined, arguments);
           return;
         }
@@ -143,34 +143,34 @@ EventHooks.prototype.executeOnceCore = function () {
       };
     case 'RemoveUser':
       return function () {
-        var args = [].slice.call(arguments),
-          user = findUserId(args[0]);
+        var args = [].slice.call(arguments);
+        var user = findUserId(args[0]);
         args.push(user);
         subtractUser(user);
         defaultFunction.apply(undefined, args);
       };
     case 'RenameUser':
       return function () {
-        var args = [].slice.call(arguments),
-          user = findUserId(args[0]);
+        var args = [].slice.call(arguments);
+        var user = findUserId(args[0]);
         args.push(user);
         subtractUser(user);
         defaultFunction.apply(undefined, args);
       };
     case 'RemoveVideo':
       return function () {
-        var indexOfVid = window.room.playlist.indexOf(arguments[0]),
-          video = window.room.playlist.videos[indexOfVid],
-          args = [].slice.call(arguments);
+        var indexOfVid = window.room.playlist.indexOf(arguments[0]);
+        var video = window.room.playlist.videos[indexOfVid];
+        var args = [].slice.call(arguments);
         args.push(video);
         args.push(indexOfVid);
         defaultFunction.apply(undefined, args);
       };
     case 'MoveVideo':
       return function () {
-        var args = [].slice.call(arguments),
-          oldPosition = window.room.playlist.indexOf(args[0]),
-          video = window.room.playlist.videos[oldPosition];
+        var args = [].slice.call(arguments);
+        var oldPosition = window.room.playlist.indexOf(args[0]);
+        var video = window.room.playlist.videos[oldPosition];
         args.push(oldPosition);
         args.push(video);
         defaultFunction.apply(undefined, args);
@@ -178,7 +178,7 @@ EventHooks.prototype.executeOnceCore = function () {
     case 'Skips':
       return function () {
         var args = [].slice.call(arguments);
-        args.push((args[1] / th.blacknames) * 100); //skip percentage
+        args.push((args[1] / _this.blacknames) * 100); //skip percentage
         defaultFunction.apply(undefined, args);
       };
     }
@@ -202,12 +202,17 @@ EventHooks.prototype.executeOnceCore = function () {
         ev.old = window.room[hook];
         window.room[hook] = createHookFunction(ev);
       } else {
-        logger().error(th.name, "Hook not found", hook, "with location", ev.location);
+        logger().error(_this.name,
+          'Hook not found',
+          hook,
+          'with location',
+          ev.location
+        );
       }
     }
   });
 
-  window.addEventListener("message", function (event) {
+  window.addEventListener('message', function (event) {
     try {
       var parsed = JSON.parse(event.data);
       if (parsed.action) {
@@ -224,26 +229,27 @@ EventHooks.prototype.executeOnceCore = function () {
     window.users.forEach(countUser);
   }
 
-  events.on(th, 'Shuffle', function (){
-    th.isShuffle = true;
+  events.on(_this, 'Shuffle', function (){
+    _this.isShuffle = true;
   }, true);
 
-  events.on(th, 'Shuffle', function (){
-    th.isShuffle = false;
+  events.on(_this, 'Shuffle', function (){
+    _this.isShuffle = false;
   }, false);
 };
 
 EventHooks.prototype.preConnect = function () {
-  "use strict";
-  var csel = '#cin',
-    oldPlayerDestroy = window.room.video.destroy;
+  'use strict';
+  var csel = '#cin';
+  var oldPlayerDestroy = window.room.video.destroy;
   window.room.video.destroy = function () {
     events.fire('PlayerDestroy', [], true);
     oldPlayerDestroy();
     events.fire('PlayerDestroy', [], false);
   };
   $(csel).bindFirst('keypress', function (event) {
-    events.fire('InputKeypress[{0}]'.format(event.keyCode), [event, $(csel).val()], false);
+    events.fire('InputKeypress[{0}]'.format(event.keyCode),
+     [event, $(csel).val()], false);
     events.fire('InputKeypress', [event, $(csel).val()], false);
     if (event.keyCode === 13 && $(csel).val() !== '') {
       events.fire('SendChat', [$(csel).val()], false);
@@ -254,17 +260,19 @@ EventHooks.prototype.preConnect = function () {
     if (event.keyCode === 9) {
       event.preventDefault();
     }
-    events.fire('InputKeydown[{0}]'.format(event.keyCode), [event, $(csel).val()], false);
+    events.fire('InputKeydown[{0}]'.format(event.keyCode),
+     [event, $(csel).val()], false);
     events.fire('InputKeydown', [event, $(csel).val()], false);
   });
   $(csel).bindFirst('keyup', function (event) {
-    events.fire('InputKeyup[{0}]'.format(event.keyCode), [event, $(csel).val()], false);
+    events.fire('InputKeyup[{0}]'.format(event.keyCode),
+     [event, $(csel).val()], false);
     events.fire('InputKeyup', [event, $(csel).val()], false);
   });
 };
 
 EventHooks.prototype.resetVariables = function () {
-  "use strict";
+  'use strict';
   this.mods = 0;
   this.blacknames = 0;
   this.greynames = 0;

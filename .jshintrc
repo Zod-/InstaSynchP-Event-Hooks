@@ -5,7 +5,8 @@
     "events":    true,
     "plugins":   true,
     "isUdef":    true,
-    "thisUser":  true
+    "thisUser":  true,
+    "findUserId":true
   },
   "qunit":       true,
   "jquery":      true,
