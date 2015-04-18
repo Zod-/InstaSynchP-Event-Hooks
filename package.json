@@ -28,10 +28,13 @@
       "name": "Zod-"
     },
     "require": {
-      "greasyfork": {
+      "greasyfork": [{
         "id": "5647-instasynchp-library",
         "version": "41059"
-      }
+      }, {
+        "id": "2857-jquery-bind-first",
+        "version": "26080"
+      }]
     },
     "other": {
       "include": [
