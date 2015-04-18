@@ -1,25 +1,22 @@
 // ==UserScript==
-// @name        InstaSynchP Event Hooks
-// @namespace   InstaSynchP
-// @description Add hooks to the events on the InstaSynch page
-
-// @version     1.1.6.1
-// @author      Zod-
-// @source      https://github.com/Zod-/InstaSynchP-Event-Hooks
-// @license     MIT
-
-// @include     *://instasync.com/r/*
-// @include     *://*.instasync.com/r/*
-// @grant       none
-// @run-at      document-start
-
-// @require     https://greasyfork.org/scripts/2857-jquery-bind-first/code/jquerybind-first.js?version=26080
-// @require     https://greasyfork.org/scripts/5647-instasynchp-library/code/code.js?version=37716
+// @name         InstaSynchP-Event-Hooks
+// @namespace    InstaSynchP
+// @description  Attaches itself to the functions on InstaSync to fire events
+// @version      1.1.7
+// @author       Zod-
+// @source       https://github.com/Zod-/InstaSynchP-Event-Hooks
+// @license      MIT
+// @require      https://greasyfork.org/scripts/5647-instasynchp-library/code/code.js?version=41059
+// @require      https://greasyfork.org/scripts/2857-jquery-bind-first/code/code.js?version=26080
+// @include      *://instasync.com/r/*
+// @include      *://*.instasync.com/r/*
+// @grant        none
+// @run-at       document-start
 // ==/UserScript==
 
 function EventHooks(version) {
   "use strict";
-  this.version = version;
+  this.version = '1.1.7';
   this.name = 'InstaSynchP Event Hooks';
   this.resetVariables();
   this.isPlaylistLoaded = false;
@@ -290,4 +287,4 @@ EventHooks.prototype.resetVariables = function () {
 };
 
 window.plugins = window.plugins || {};
-window.plugins.eventHooks = new EventHooks('1.1.6.1');
+window.plugins.eventHooks = new EventHooks();
