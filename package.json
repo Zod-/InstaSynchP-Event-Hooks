@@ -28,13 +28,16 @@
       "name": "Zod-"
     },
     "require": {
-      "greasyfork": [{
-        "id": "5647-instasynchp-library",
-        "version": "41059"
-      }, {
-        "id": "2857-jquery-bind-first",
-        "version": "26080"
-      }]
+      "greasyfork": [
+        {
+          "id": "5647-instasynchp-library",
+          "version": "41059"
+        },
+        {
+          "id": "2857-jquery-bind-first",
+          "version": "26080"
+        }
+      ]
     },
     "other": {
       "include": [
@@ -44,5 +47,12 @@
       "grant": "none",
       "run-at": "document-start"
     }
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-concat": "^0.5.1",
+    "grunt-contrib-jshint": "^0.11.2",
+    "grunt-string-replace": "^1.0.0",
+    "grunt-userscript-meta": "^0.1.2"
   }
 }
