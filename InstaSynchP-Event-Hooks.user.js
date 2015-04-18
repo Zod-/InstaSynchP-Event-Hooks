@@ -22,24 +22,26 @@ function EventHooks(version) {
   this.version = version;
   this.name = 'InstaSynchP Event Hooks';
   this.resetVariables();
+  this.isPlaylistLoaded = false;
+  this.isShuffle = false;
 }
+
+EventHooks.prototype.executeOnceCore = function () {
+  'use strict';
+  this.isPlaylistLoaded = false;
+};
 
 EventHooks.prototype.executeOnceCore = function () {
   "use strict";
   var th = this,
     oldLinkify = window.linkify,
     hooks = [
-      {'onConnecting':{'name':'Connecting'}},
-      {'onConnected':{'name':'Connected'}},
-      {'onJoining':{'name':'Joining'}},
-      {'onJoined':{'name':'Joined'}},
-      {'onReconnecting':{'name':'Reconnecting'}},
-      {'onReconnect':{'name':'Reconnect'}},
-      //{'reconnectFailed':{'name':'ReconnectFailed'}},
-      {'onError':{'name':'Error'}},
-      {'onDisconnect':{'name':'Disconnect'}},
-      //{'requestPartialPage':{'name':'RequestPartialPage'}},
-      //{'loadRoomObj':{'name':'LoadRoom'}},
+      {'connected':{'location': 'events', 'name':'Connected'}},
+      {'joining':{'location': 'events', 'name':'Joining'}},
+      {'joined':{'location': 'events', 'name':'Joined'}},
+      {'reconnecting':{'location': 'events', 'name':'Reconnecting'}},
+      {'reconnect':{'location': 'events', 'name':'Reconnect'}},
+      {'disconnect':{'location': 'events', 'name':'Disconnect'}},
       {'addMessage':{'name':'AddMessage'}},
       {'addUser':{'location':'userlist', 'name':'AddUser'}},
       {'removeUser':{'location':'userlist', 'name':'RemoveUser'}},
@@ -114,8 +116,26 @@ EventHooks.prototype.executeOnceCore = function () {
           events.fire(ev.name, [arg], false);
         });
       }
+
+    if(ev.location === 'events'){
+      room.e.on(ev.hook, function(){
+        events.fire(ev.name, arguments, false);
+      });
+      return;
+    }
       //custom hooks
     switch (ev.name) {
+    case 'LoadPlaylist':
+      return function(){
+        if(!th.isPlaylistLoaded){
+          defaultFunction.apply(undefined, arguments);
+          th.isPlaylistLoaded = true;
+        }else{
+          events.fire('Shuffle', arguments, true);
+          ev.old.apply(undefined, arguments);
+          events.fire('Shuffle', arguments, false);
+        }
+      };
     case 'AddUser':
       return function () {
         if (Array.isArray(arguments[0])){
@@ -130,6 +150,11 @@ EventHooks.prototype.executeOnceCore = function () {
       };
     case 'AddVideo':
       return function () {
+        console.log('AddVideo');
+        if (th.isShuffle) {
+          ev.old.apply(undefined, arguments);
+          return;
+        }
         if (Array.isArray(arguments[0])){
           arrayFunction.apply(undefined, arguments);
         }else{
@@ -185,7 +210,10 @@ EventHooks.prototype.executeOnceCore = function () {
         continue;
       }
       var ev = temp[hook];
-      if (ev.location &&
+      ev.hook = hook;
+      if(ev.location === 'events'){
+        createHookFunction(ev);
+      } else if (ev.location &&
         window.room[ev.location] &&
         window.room[ev.location][hook]) {
         ev.old = window.room[ev.location][hook];
@@ -215,6 +243,14 @@ EventHooks.prototype.executeOnceCore = function () {
   if (window.plugins.core.connected) {
     window.users.forEach(countUser);
   }
+
+  events.on(th, 'Shuffle', function (){
+    th.isShuffle = true;
+  }, true);
+
+  events.on(th, 'Shuffle', function (){
+    th.isShuffle = false;
+  }, false);
 };
 
 EventHooks.prototype.preConnect = function () {
