@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         InstaSynchP-Event-Hooks
+// @name         InstaSynchP Event Hooks
 // @namespace    InstaSynchP
 // @description  Attaches itself to the functions on InstaSync to fire events
 // @version      1.1.7

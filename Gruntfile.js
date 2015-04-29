@@ -12,6 +12,11 @@ module.exports = function (grunt) {
           replacements: [{
             pattern: /@VERSION@/g,
             replacement: '<%= pkg.version %>'
+          }, {
+            pattern: /\/\/ @name[^\n]*\n/g,
+            replacement: function (match) {
+              return match.replace(/-/g, ' ');
+            }
           }]
         }
       }
