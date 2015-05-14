@@ -2,7 +2,7 @@
 // @name         InstaSynchP Event Hooks
 // @namespace    InstaSynchP
 // @description  Attaches itself to the functions on InstaSync to fire events
-// @version      1.1.8
+// @version      1.1.9
 // @author       Zod-
 // @source       https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license      MIT
@@ -16,7 +16,7 @@
 
 function EventHooks() {
   'use strict';
-  this.version = '1.1.8';
+  this.version = '1.1.9';
   this.name = 'InstaSynchP Event Hooks';
   this.resetVariables();
   this.isPlaylistLoaded = false;
@@ -142,11 +142,15 @@ EventHooks.prototype.createHook = function (ev) {
     var frameworkArgs = arguments[1] || instasyncArgs;
     frameworkArgs = frameworkArgs[0];
     frameworkArgs.forEach(function () {
-      events.fire(ev.name, arguments, true);
+      var args = [].slice.call(arguments);
+      args = args.slice(0, args.length - 2);
+      events.fire(ev.name, args, true);
     });
     ev.oldFn.apply(undefined, instasyncArgs);
     frameworkArgs.forEach(function () {
-      events.fire(ev.name, arguments, false);
+      var args = [].slice.call(arguments);
+      args = args.slice(0, args.length - 2);
+      events.fire(ev.name, args, false);
     });
   }
 

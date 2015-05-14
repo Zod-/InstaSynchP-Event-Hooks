@@ -1,6 +1,6 @@
 {
   "name": "InstaSynchP-Event-Hooks",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "Attaches itself to the functions on InstaSync to fire events",
   "main": "Gruntfile.js",
   "scripts": {
