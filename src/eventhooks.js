@@ -90,18 +90,23 @@ EventHooks.prototype.executeOnceCore = function () {
 
   function createHookFunction(ev) {
     function defaultFunction() {
-      events.fire(ev.name, arguments, true);
-      ev.oldFn.apply(undefined, arguments);
-      events.fire(ev.name, arguments, false);
+      var instasyncArgs = arguments[0];
+      var frameworkArgs = arguments[1] || instasyncArgs;
+      events.fire(ev.name, frameworkArgs, true);
+      ev.oldFn.apply(undefined, instasyncArgs);
+      events.fire(ev.name, frameworkArgs, false);
     }
 
     function arrayFunction() {
-      arguments[0].forEach(function (arg) {
-        events.fire(ev.name, [arg], true);
+      var instasyncArgs = arguments[0];
+      var frameworkArgs = arguments[1] || instasyncArgs;
+      frameworkArgs = frameworkArgs[0];
+      frameworkArgs.forEach(function () {
+        events.fire(ev.name, arguments, true);
       });
-      ev.oldFn.apply(undefined, arguments);
-      arguments[0].forEach(function (arg) {
-        events.fire(ev.name, [arg], false);
+      ev.oldFn.apply(undefined, instasyncArgs);
+      frameworkArgs.forEach(function () {
+        events.fire(ev.name, arguments, false);
       });
     }
 
@@ -116,7 +121,7 @@ EventHooks.prototype.executeOnceCore = function () {
     case 'LoadPlaylist':
       return function () {
         if (!_this.isPlaylistLoaded) {
-          defaultFunction.apply(undefined, arguments);
+          defaultFunction.apply(undefined, [arguments]);
           _this.isPlaylistLoaded = true;
         } else {
           events.fire('Shuffle', arguments, true);
@@ -128,10 +133,10 @@ EventHooks.prototype.executeOnceCore = function () {
       return function () {
         if (Array.isArray(arguments[0])) {
           arguments[0].forEach(countUser);
-          arrayFunction.apply(undefined, arguments);
+          arrayFunction.apply(undefined, [arguments]);
         } else {
           countUser(arguments[0]);
-          defaultFunction.apply(undefined, arguments);
+          defaultFunction.apply(undefined, [arguments]);
         }
       };
     case 'AddVideo':
@@ -141,53 +146,46 @@ EventHooks.prototype.executeOnceCore = function () {
           return;
         }
         if (Array.isArray(arguments[0])) {
-          arrayFunction.apply(undefined, arguments);
+          arrayFunction.apply(undefined, [arguments]);
         } else {
-          defaultFunction.apply(undefined, arguments);
+          defaultFunction.apply(undefined, [arguments]);
         }
       };
     case 'RemoveUser':
-      return function () {
-        var args = [].slice.call(arguments);
-        var user = findUserId(args[0]);
-        args.push(user);
-        subtractUser(user);
-        defaultFunction.apply(undefined, args);
-      };
+    case 'MakeLeader':
     case 'RenameUser':
       return function () {
-        var args = [].slice.call(arguments);
-        var user = findUserId(args[0]);
-        args.push(user);
-        subtractUser(user);
-        defaultFunction.apply(undefined, args);
+        var user = findUserId(arguments[0]);
+        if (ev.name === 'RenameUser') {
+          user.username = arguments[1];
+        }
+        defaultFunction.apply(undefined, [
+          arguments, [user]
+        ]);
       };
+    case 'PlayVideo':
     case 'RemoveVideo':
+    case 'MoveVideo':
       return function () {
         var indexOfVid = window.room.playlist.indexOf(arguments[0]);
         var video = window.room.playlist.videos[indexOfVid];
         var args = [].slice.call(arguments);
-        args.push(video);
-        args.push(indexOfVid);
-        defaultFunction.apply(undefined, args);
-      };
-    case 'MoveVideo':
-      return function () {
-        var args = [].slice.call(arguments);
-        var oldPosition = window.room.playlist.indexOf(args[0]);
-        var video = window.room.playlist.videos[oldPosition];
-        args.push(oldPosition);
-        args.push(video);
-        defaultFunction.apply(undefined, args);
+        args[0] = video;
+        if (ev.name === 'MoveVideo') {
+          args.push(indexOfVid);
+        }
+        defaultFunction.apply(undefined, [arguments, args]);
       };
     case 'Skips':
       return function () {
         var args = [].slice.call(arguments);
         args.push((args[1] / _this.blacknames) * 100); //skip percentage
-        defaultFunction.apply(undefined, args);
+        defaultFunction.apply(undefined, [arguments, args]);
       };
     }
-    return defaultFunction;
+    return function () {
+      defaultFunction.apply(undefined, [arguments]);
+    };
   }
 
   for (var locationName in hooks) {
@@ -245,6 +243,10 @@ EventHooks.prototype.executeOnceCore = function () {
   events.on(_this, 'Shuffle', function () {
     _this.isShuffle = false;
   }, false);
+
+  events.on(_this, 'RemoveUser', function (user) {
+    subtractUser(user);
+  }, true);
 };
 
 EventHooks.prototype.preConnect = function () {
