@@ -126,11 +126,15 @@ EventHooks.prototype.createHook = function (ev) {
     var frameworkArgs = arguments[1] || instasyncArgs;
     frameworkArgs = frameworkArgs[0];
     frameworkArgs.forEach(function () {
-      events.fire(ev.name, arguments, true);
+      var args = [].slice.call(arguments);
+      args = args.slice(0, args.length - 2);
+      events.fire(ev.name, args, true);
     });
     ev.oldFn.apply(undefined, instasyncArgs);
     frameworkArgs.forEach(function () {
-      events.fire(ev.name, arguments, false);
+      var args = [].slice.call(arguments);
+      args = args.slice(0, args.length - 2);
+      events.fire(ev.name, args, false);
     });
   }
 
