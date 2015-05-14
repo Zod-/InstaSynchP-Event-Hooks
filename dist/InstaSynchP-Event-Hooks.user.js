@@ -2,7 +2,7 @@
 // @name         InstaSynchP Event Hooks
 // @namespace    InstaSynchP
 // @description  Attaches itself to the functions on InstaSync to fire events
-// @version      1.1.7
+// @version      1.1.8
 // @author       Zod-
 // @source       https://github.com/Zod-/InstaSynchP-Event-Hooks
 // @license      MIT
@@ -16,19 +16,13 @@
 
 function EventHooks() {
   'use strict';
-  this.version = '1.1.7';
+  this.version = '1.1.8';
   this.name = 'InstaSynchP Event Hooks';
   this.resetVariables();
   this.isPlaylistLoaded = false;
   this.isShuffle = false;
   this.hooks = {};
-}
-
-EventHooks.prototype.executeOnceCore = function () {
-  'use strict';
-  var _this = this;
-  var oldLinkify = window.linkify;
-  var hooks = {
+  this.hookBinds = {
     events: {
       connected: 'Connected',
       joining: 'Joining',
@@ -67,6 +61,11 @@ EventHooks.prototype.executeOnceCore = function () {
       sendcmd: 'SendCMD',
     }
   };
+}
+
+EventHooks.prototype.bindLinkifySuppress = function () {
+  'use strict';
+  var oldLinkify = window.linkify;
 
   window.linkify = function (str, buildHashtagUrl, includeW3, target) {
     var tags = [];
@@ -87,156 +86,192 @@ EventHooks.prototype.executeOnceCore = function () {
     });
     return str;
   };
+};
 
-  function countUser(user, neg) {
-    var inc = (typeof neg === 'boolean' && neg) ? -1 : 1;
-    if (user.permissions > 0) {
-      _this.mods += inc;
-    }
-    if (user.loggedin) {
-      _this.blacknames += inc;
-    } else {
-      _this.greynames += inc;
-    }
+EventHooks.prototype.countUser = function (user, addRemove) {
+  'use strict';
+  var _this = this;
+  var inc = (typeof addRemove === 'boolean' && addRemove) ? 1 : -1;
+  if (user.permissions > 0) {
+    _this.mods += inc;
+  }
+  if (user.loggedin) {
+    _this.blacknames += inc;
+  } else {
+    _this.greynames += inc;
+  }
+};
+
+EventHooks.prototype.addUser = function (user) {
+  'use strict';
+  this.countUser(user, true);
+};
+
+EventHooks.prototype.removeUser = function (user) {
+  'use strict';
+  this.countUser(user, false);
+};
+
+EventHooks.prototype.bindUserCount = function () {
+  'use strict';
+  var _this = this;
+
+  events.on(_this, 'RemoveUser', function (user) {
+    _this.removeUser(user);
+  }, true);
+
+  events.on(_this, 'AddUser', function (user) {
+    _this.addUser(user);
+  }, true);
+};
+
+EventHooks.prototype.createHook = function (ev) {
+  'use strict';
+  var _this = this;
+
+  function defaultFunction() {
+    var instasyncArgs = arguments[0];
+    var frameworkArgs = arguments[1] || instasyncArgs;
+    events.fire(ev.name, frameworkArgs, true);
+    ev.oldFn.apply(undefined, instasyncArgs);
+    events.fire(ev.name, frameworkArgs, false);
   }
 
-  function subtractUser(user) {
-    countUser(user, true);
-  }
-
-  function createHookFunction(ev) {
-    function defaultFunction() {
+  function arrayFunction() {
+    var instasyncArgs = arguments[0];
+    var frameworkArgs = arguments[1] || instasyncArgs;
+    frameworkArgs = frameworkArgs[0];
+    frameworkArgs.forEach(function () {
       events.fire(ev.name, arguments, true);
-      ev.oldFn.apply(undefined, arguments);
+    });
+    ev.oldFn.apply(undefined, instasyncArgs);
+    frameworkArgs.forEach(function () {
       events.fire(ev.name, arguments, false);
-    }
-
-    function arrayFunction() {
-      arguments[0].forEach(function (arg) {
-        events.fire(ev.name, [arg], true);
-      });
-      ev.oldFn.apply(undefined, arguments);
-      arguments[0].forEach(function (arg) {
-        events.fire(ev.name, [arg], false);
-      });
-    }
-
-    if (ev.location === 'events') {
-      window.room.e.on(ev.hook, function () {
-        events.fire(ev.name, arguments, false);
-      });
-      return;
-    }
-    //custom hooks
-    switch (ev.name) {
-    case 'LoadPlaylist':
-      return function () {
-        if (!_this.isPlaylistLoaded) {
-          defaultFunction.apply(undefined, arguments);
-          _this.isPlaylistLoaded = true;
-        } else {
-          events.fire('Shuffle', arguments, true);
-          ev.oldFn.apply(undefined, arguments);
-          events.fire('Shuffle', arguments, false);
-        }
-      };
-    case 'AddUser':
-      return function () {
-        if (Array.isArray(arguments[0])) {
-          arguments[0].forEach(countUser);
-          arrayFunction.apply(undefined, arguments);
-        } else {
-          countUser(arguments[0]);
-          defaultFunction.apply(undefined, arguments);
-        }
-      };
-    case 'AddVideo':
-      return function () {
-        if (_this.isShuffle) {
-          ev.oldFn.apply(undefined, arguments);
-          return;
-        }
-        if (Array.isArray(arguments[0])) {
-          arrayFunction.apply(undefined, arguments);
-        } else {
-          defaultFunction.apply(undefined, arguments);
-        }
-      };
-    case 'RemoveUser':
-      return function () {
-        var args = [].slice.call(arguments);
-        var user = findUserId(args[0]);
-        args.push(user);
-        subtractUser(user);
-        defaultFunction.apply(undefined, args);
-      };
-    case 'RenameUser':
-      return function () {
-        var args = [].slice.call(arguments);
-        var user = findUserId(args[0]);
-        args.push(user);
-        subtractUser(user);
-        defaultFunction.apply(undefined, args);
-      };
-    case 'RemoveVideo':
-      return function () {
-        var indexOfVid = window.room.playlist.indexOf(arguments[0]);
-        var video = window.room.playlist.videos[indexOfVid];
-        var args = [].slice.call(arguments);
-        args.push(video);
-        args.push(indexOfVid);
-        defaultFunction.apply(undefined, args);
-      };
-    case 'MoveVideo':
-      return function () {
-        var args = [].slice.call(arguments);
-        var oldPosition = window.room.playlist.indexOf(args[0]);
-        var video = window.room.playlist.videos[oldPosition];
-        args.push(oldPosition);
-        args.push(video);
-        defaultFunction.apply(undefined, args);
-      };
-    case 'Skips':
-      return function () {
-        var args = [].slice.call(arguments);
-        args.push((args[1] / _this.blacknames) * 100); //skip percentage
-        defaultFunction.apply(undefined, args);
-      };
-    }
-    return defaultFunction;
+    });
   }
 
-  for (var locationName in hooks) {
-    if (!hooks.hasOwnProperty(locationName)) {
-      continue;
-    }
-    var location = hooks[locationName];
-    for (var hookName in location) {
-      if (!location.hasOwnProperty(hookName)) {
-        continue;
-      }
-      var ev = {
-        hook: hookName,
-        name: location[hookName],
-        location: locationName
-      };
-      if (locationName === 'events') {
-        createHookFunction(ev);
-      } else if (locationName === 'room') {
-        ev.oldFn = window.room[ev.hook];
-        window.room[ev.hook] = createHookFunction(ev);
+  if (ev.location === 'events') {
+    window.room.e.on(ev.hook, function () {
+      events.fire(ev.name, arguments, false);
+    });
+    return;
+  }
+  //custom hooks
+  switch (ev.name) {
+  case 'LoadPlaylist':
+    return function () {
+      if (!_this.isPlaylistLoaded) {
+        defaultFunction.apply(undefined, [arguments]);
+        _this.isPlaylistLoaded = true;
       } else {
-        if (locationName === 'room') {
-          ev.context = window.room;
-        } else {
-          ev.context = window.room[ev.location];
-        }
-        ev.oldFn = ev.context[ev.hook];
-        ev.context[ev.hook] = createHookFunction(ev);
+        events.fire('Shuffle', arguments, true);
+        ev.oldFn.apply(undefined, arguments);
+        events.fire('Shuffle', arguments, false);
       }
-    }
+    };
+  case 'AddUser':
+    return function () {
+      if (Array.isArray(arguments[0])) {
+        arrayFunction.apply(undefined, [arguments]);
+      } else {
+        defaultFunction.apply(undefined, [arguments]);
+      }
+    };
+  case 'AddVideo':
+    return function () {
+      if (_this.isShuffle) {
+        ev.oldFn.apply(undefined, arguments);
+        return;
+      }
+      if (Array.isArray(arguments[0])) {
+        arrayFunction.apply(undefined, [arguments]);
+      } else {
+        defaultFunction.apply(undefined, [arguments]);
+      }
+    };
+  case 'RemoveUser':
+  case 'MakeLeader':
+  case 'RenameUser':
+    return function () {
+      var user = findUserId(arguments[0]);
+      if (ev.name === 'RenameUser') {
+        user.username = arguments[1];
+      }
+      defaultFunction.apply(undefined, [
+        arguments, [user]
+      ]);
+    };
+  case 'PlayVideo':
+  case 'RemoveVideo':
+  case 'MoveVideo':
+    return function () {
+      var indexOfVid = window.room.playlist.indexOf(arguments[0]);
+      var video = window.room.playlist.videos[indexOfVid];
+      var args = [].slice.call(arguments);
+      args[0] = video;
+      if (ev.name === 'MoveVideo') {
+        args.push(indexOfVid);
+      }
+      defaultFunction.apply(undefined, [arguments, args]);
+    };
+  case 'Skips':
+    return function () {
+      var args = [].slice.call(arguments);
+      args.push((args[1] / _this.blacknames) * 100); //skip percentage
+      defaultFunction.apply(undefined, [arguments, args]);
+    };
   }
+  return function () {
+    defaultFunction.apply(undefined, [arguments]);
+  };
+};
 
+EventHooks.prototype.forEachHookBind = function (callback) {
+  'use strict';
+  var _this = this;
+  Object.keys(_this.hookBinds).forEach(function (locationName) {
+    var location = _this.hookBinds[locationName];
+    Object.keys(location).forEach(function (hookName) {
+      var hook = location[hookName];
+      callback.apply(_this, [{
+        name: locationName,
+        value: location
+      }, {
+        name: hookName,
+        value: hook
+      }]);
+    });
+  });
+};
+
+EventHooks.prototype.bindHooks = function () {
+  'use strict';
+  var _this = this;
+  _this.forEachHookBind(function (locationPair, hookPair) {
+    var ev = {
+      hook: hookPair.name,
+      name: hookPair.value,
+      location: locationPair.name
+    };
+    if (locationPair.name === 'events') {
+      _this.createHook(ev);
+    } else if (locationPair.name === 'room') {
+      ev.oldFn = window.room[ev.hook];
+      window.room[ev.hook] = _this.createHook(ev);
+    } else {
+      if (locationPair.name === 'room') {
+        ev.context = window.room;
+      } else {
+        ev.context = window.room[ev.location];
+      }
+      ev.oldFn = ev.context[ev.hook];
+      ev.context[ev.hook] = _this.createHook(ev);
+    }
+  });
+};
+
+EventHooks.prototype.bindPageMessages = function () {
+  'use strict';
   window.addEventListener('message', function (event) {
     try {
       var parsed = JSON.parse(event.data);
@@ -248,11 +283,11 @@ EventHooks.prototype.executeOnceCore = function () {
       events.fire('PageMessage', [parsed], false);
     } catch (ignore) {}
   }, false);
+};
 
-  //get user count when already connected
-  if (window.plugins.core.connected) {
-    window.room.userlist.users.forEach(countUser);
-  }
+EventHooks.prototype.bindShuffle = function () {
+  'use strict';
+  var _this = this;
 
   events.on(_this, 'Shuffle', function () {
     _this.isShuffle = true;
@@ -263,15 +298,19 @@ EventHooks.prototype.executeOnceCore = function () {
   }, false);
 };
 
-EventHooks.prototype.preConnect = function () {
+EventHooks.prototype.bindPlayerDestroy = function () {
   'use strict';
-  var csel = '#cin';
   var oldPlayerDestroy = window.room.video.destroy;
   window.room.video.destroy = function () {
-    events.fire('PlayerDestroy', [], true);
-    oldPlayerDestroy();
-    events.fire('PlayerDestroy', [], false);
+    events.fire('PlayerDestroy', arguments, true);
+    oldPlayerDestroy.apply(window.room.video, arguments);
+    events.fire('PlayerDestroy', arguments, false);
   };
+};
+
+EventHooks.prototype.bindKeyInput = function () {
+  'use strict';
+  var csel = '#cin';
   $(csel).bindFirst('keypress', function (event) {
     events.fire('InputKeypress[{0}]'.format(event.keyCode), [event, $(
       csel).val()], false);
@@ -297,12 +336,29 @@ EventHooks.prototype.preConnect = function () {
   });
 };
 
+EventHooks.prototype.executeOnceCore = function () {
+  'use strict';
+  var _this = this;
+  _this.bindLinkifySuppress();
+  _this.bindUserCount();
+  _this.bindHooks();
+  _this.bindPageMessages();
+  _this.bindShuffle();
+};
+
+EventHooks.prototype.preConnect = function () {
+  'use strict';
+  var _this = this;
+  _this.bindPlayerDestroy();
+  _this.bindKeyInput();
+};
+
 EventHooks.prototype.resetVariables = function () {
   'use strict';
   this.mods = 0;
   this.blacknames = 0;
-  this.isPlaylistLoaded = false;
   this.greynames = 0;
+  this.isPlaylistLoaded = false;
 };
 
 window.plugins = window.plugins || {};
