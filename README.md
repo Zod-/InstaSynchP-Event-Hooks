@@ -1,4 +1,4 @@
-InstaSynchP-Event-Hooks
+InstaSynchP-Event-Hooks [![Build Status](https://travis-ci.org/Zod-/InstaSynchP-Event-Hooks.svg?branch=master)](https://travis-ci.org/Zod-/InstaSynchP-Event-Hooks)
 =======================
 
 Add hooks to a lot of the events on the InstaSynch page
